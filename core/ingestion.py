@@ -77,13 +77,15 @@ def load_erp_excel(file) -> pd.DataFrame:
     # Normalise column names (strip whitespace)
     df.columns = df.columns.str.strip()
 
-    # Schema validation (non-fatal)
+    # Schema validation (Fatal Error)
     missing_cols = [c for c in REQUIRED_COLS if c not in df.columns]
     if missing_cols:
-        st.warning(
-            f"\u26a0\ufe0f Missing expected columns: `{missing_cols}`. "
-            "Processing will continue with available columns."
+        st.error(
+            f"🚨 **CRITICAL ERROR: Invalid Data Format**\n\n"
+            f"The uploaded Excel file is missing the following required columns: `{missing_cols}`.\n\n"
+            "Cannot calculate accurate operational metrics without these columns. Please ensure you are uploading the correct CDPL ERP export and that the header is on Row 2."
         )
+        st.stop()
 
     # Drop fully-blank rows
     df = df.dropna(how="all").reset_index(drop=True)
