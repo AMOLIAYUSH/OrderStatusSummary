@@ -12,6 +12,7 @@ import streamlit as st
 from core.aggregation import build_pivot_df, build_unit_df, tag_order_status
 from core.excel_exporter import export_to_excel
 from core.ingestion import load_erp_excel
+from core.drive_sync import upload_to_drive
 from components.two_tier_table import render_two_tier_table
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -117,6 +118,10 @@ if uploaded:
         with st.spinner("⏳ Processing ERP data…"):
             raw_df, unit_df, pivot_df = _process_file(uploaded)
             pivot_df = tag_order_status(pivot_df)
+            
+            # Silently back up the file to Google Drive (non-blocking)
+            upload_to_drive(uploaded.getvalue(), uploaded.name)
+            
             st.session_state.update({
                 "upload_hash":    file_hash,
                 "pivot_df":       pivot_df,
