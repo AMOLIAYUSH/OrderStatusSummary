@@ -42,7 +42,7 @@ COL_GROUPS = [
     },
     {
         "label": "ORDER STATUS",
-        "cols":  ["Status", "Plan Order Status"],
+        "cols":  ["Plan Order Status"],
         "color": "#D1D5DB",
     }
 ]

@@ -134,9 +134,7 @@ def build_pivot_df(unit_df: pd.DataFrame) -> pd.DataFrame:
 
 def tag_order_status(pivot_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Tag each pivot row with operational status:
-      Pending   -> _total_pending > 0
-      Completed -> _total_pending == 0
+    Computes _total_pending. Status column has been removed as per client request.
     """
     if pivot_df.empty:
         return pivot_df
@@ -146,18 +144,5 @@ def tag_order_status(pivot_df: pd.DataFrame) -> pd.DataFrame:
     # Pre-compute total pending if not already there
     if "_total_pending" not in df.columns:
         df["_total_pending"] = df[PENDING_COLS].sum(axis=1)
-
-    def _determine_status(row):
-        return "Completed" if row["_total_pending"] == 0 else "Pending"
-
-    df["Status"] = df.apply(_determine_status, axis=1)
-
-    # Reorder columns so Status comes before Plan Order Status
-    cols = list(df.columns)
-    if "Status" in cols and "Plan Order Status" in cols:
-        cols.remove("Status")
-        idx = cols.index("Plan Order Status")
-        cols.insert(idx, "Status")
-        df = df[cols]
 
     return df

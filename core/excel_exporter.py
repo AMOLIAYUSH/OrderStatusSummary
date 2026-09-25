@@ -77,7 +77,7 @@ TIER1_GROUPS = [
     },
     {
         "label": "ORDER STATUS",
-        "cols":  ["Status", "Plan Order Status"],
+        "cols":  ["Plan Order Status"],
         "fill":  "status",
     }
 ]
