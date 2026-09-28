@@ -120,7 +120,7 @@ class TestTagOrderStatus:
 
     def _pivot(self, sotrans, pending):
         return pd.DataFrame([{
-            "Order Number": sotrans,
+            "Order Number": sotrans, "Zone": "-", "City": "-", "Delivery Date": "-", "Order Weight": 0.0, "Order SQM Area": 0.0,
             "TEMP (Pending)": pending, "LAMI (Pending)": 0,
             "IGU (Pending)": 0, "LAMI + IGU (Pending)": 0,
             "ANI (Pending)": 0, "FRG (Pending)": 0,

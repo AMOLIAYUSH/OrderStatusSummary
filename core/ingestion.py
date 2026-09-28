@@ -15,7 +15,8 @@ REQUIRED_COLS = [
     "PNAME", "SOTRANS", "SALES_ORDER_DATE",
     "OBTRANS", "SNO", "OBQTY", "QC_OUT", "OBDESCRIPTION",
     "T", "LAC", "II", "REJ_QTY", "SFO_SHOT_QTY",
-    "QC_IN", "SFOQTY", "FRGINS"
+    "QC_IN", "SFOQTY", "FRGINS",
+    "ZONE_VALUE", "DELIVERY_DATE", "WEIGHT", "AREA", "ADDRESS"
 ]
 
 
@@ -105,9 +106,11 @@ def load_erp_excel(file) -> pd.DataFrame:
     if "SALES_ORDER_DATE" in df.columns:
         df["SALES_ORDER_DATE"] = parse_dates_safely(df["SALES_ORDER_DATE"])
         df = df.dropna(subset=["SALES_ORDER_DATE"]).reset_index(drop=True)
+    if "DELIVERY_DATE" in df.columns:
+        df["DELIVERY_DATE"] = parse_dates_safely(df["DELIVERY_DATE"])
 
     # Numeric coercion
-    for col in ["OBQTY", "QC_OUT", "T", "LAC", "II", "REJ_QTY", "SFO_SHOT_QTY", "QC_IN", "SFOQTY", "FRGINS"]:
+    for col in ["OBQTY", "QC_OUT", "T", "LAC", "II", "REJ_QTY", "SFO_SHOT_QTY", "QC_IN", "SFOQTY", "FRGINS", "WEIGHT", "AREA"]:
         if col in df.columns:
             df[col] = (
                 pd.to_numeric(df[col], errors="coerce")

@@ -6,12 +6,17 @@ from __future__ import annotations
 import pandas as pd
 from core.categorization import classify_glass
 
+
+def extract_city(address: str) -> str:
+    parts = [p.strip() for p in str(address).split(',') if p.strip()]
+    return parts[-1] if parts else "-"
+
 GROUP_KEYS  = ["SOTRANS", "OBTRANS", "SNO"]
 PIVOT_KEYS  = ["SOTRANS", "PNAME", "SALES_ORDER_DATE"]
 CATEGORIES  = ["TEMP", "LAMI", "IGU", "LAMI + IGU", "ANI", "FRG"]
 
 OUTPUT_COLS = [
-    "Order Number", "Customer Name", "Order Date",
+    "Order Number", "Zone", "Customer Name", "City", "Order Date", "Delivery Date", "Order Weight", "Order SQM Area",
     "TEMP (Ordered)", "LAMI (Ordered)", "IGU (Ordered)", "LAMI + IGU (Ordered)", "ANI (Ordered)", "FRG (Ordered)",
     "Total Quantity Ordered", "Finished Goods Quantity", "Rejected Quantity", "Cancelled Quantity",
     "TEMP (Pending)", "LAMI (Pending)", "IGU (Pending)", "LAMI + IGU (Pending)", "ANI (Pending)", "FRG (Pending)",
@@ -37,13 +42,16 @@ def build_unit_df(df: pd.DataFrame) -> pd.DataFrame:
     """
     if df.empty:
         return pd.DataFrame(columns=GROUP_KEYS + [
-            "PNAME", "SALES_ORDER_DATE", "OBDESCRIPTION",
-            "Ordered_Qty", "FG_Qty", "Pending_Qty", "Category",
+            "PNAME", "ZONE_VALUE", "ADDRESS", "DELIVERY_DATE", "SALES_ORDER_DATE", "OBDESCRIPTION",
+            "Ordered_Qty", "AREA", "WEIGHT", "FG_Qty", "Pending_Qty", "Category",
         ])
 
-    for col in ["T", "LAC", "II", "QC_IN", "FRGINS"]:
+    for col in ["T", "LAC", "II", "QC_IN", "FRGINS", "AREA", "WEIGHT"]:
         if col not in df.columns:
             df[col] = 0.0
+    for col in ["ZONE_VALUE", "DELIVERY_DATE", "ADDRESS"]:
+        if col not in df.columns:
+            df[col] = "-"
     for col in ["REJ_QTY", "SFO_SHOT_QTY"]:
         if col not in df.columns:
             df[col] = 0.0
@@ -52,9 +60,14 @@ def build_unit_df(df: pd.DataFrame) -> pd.DataFrame:
         df.groupby(GROUP_KEYS, sort=False)
         .agg(
             PNAME            =("PNAME",             "first"),
+            ZONE_VALUE       =("ZONE_VALUE",        "first"),
+            ADDRESS          =("ADDRESS",           "first"),
+            DELIVERY_DATE    =("DELIVERY_DATE",     "first"),
             SALES_ORDER_DATE =("SALES_ORDER_DATE",  "first"),
             OBDESCRIPTION    =("OBDESCRIPTION",     "first"),  # identical across layers
             Ordered_Qty      =("OBQTY",             "max"),    # defensive MAX
+            AREA             =("AREA",              "max"),
+            WEIGHT           =("WEIGHT",            "sum"),
             QC_OUT           =("QC_OUT",            "min"),
             T                =("T",                 "min"),
             LAC              =("LAC",               "min"),
@@ -112,24 +125,41 @@ def build_pivot_df(unit_df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for keys, grp in unit_df.groupby(PIVOT_KEYS, sort=False):
         sotrans, pname, order_date = keys
+        
+        # Get scalar values from the first row of the group
+        first_row = grp.iloc[0]
 
         date_str = (
             order_date.strftime("%d-%b-%Y")
             if hasattr(order_date, "strftime") else str(order_date)
         )
+        
+        del_date = first_row.get("DELIVERY_DATE")
+        del_date_str = (
+            del_date.strftime("%d-%b-%Y")
+            if hasattr(del_date, "strftime") and pd.notna(del_date) else str(del_date) if pd.notna(del_date) else "-"
+        )
+        
+        city = extract_city(first_row.get("ADDRESS", "-"))
+        zone = first_row.get("ZONE_VALUE", "-")
 
         r = {
             "Order Number":  sotrans,
+            "Zone":          zone,
             "Customer Name": pname,
+            "City":          city,
             "Order Date":    date_str,
+            "Delivery Date": del_date_str,
+            "Order Weight":  round(grp["WEIGHT"].sum(), 3),
+            "Order SQM Area": round(grp["AREA"].sum(), 3),
         }
 
         pending_parts = []
         ok_parts_order = []
         pending_parts_order = []
         
-        abbr = {"TEMP": "Tem", "LAMI": "Lam", "IGU": "IGU", "LAMI + IGU": "Lam+IGU", "ANI": "ANI", "FRG": "FRG"}
-        abbr_order = {"TEMP": "Tem", "LAMI": "LAMI", "IGU": "IGU", "LAMI + IGU": "LAMI+IGU", "ANI": "ANI", "FRG": "FRG"}
+        abbr = {"TEMP": "Tem", "LAMI": "Lam", "IGU": "Igu", "LAMI + IGU": "Lam+Igu", "ANI": "ANI", "FRG": "FRG"}
+        abbr_order = {"TEMP": "Tem", "LAMI": "LAMI", "IGU": "Igu", "LAMI + IGU": "LAMI+Igu", "ANI": "ANI", "FRG": "FRG"}
 
         total_pending = 0
         total_fg = int(grp["FG_Qty"].sum())

@@ -46,7 +46,7 @@ PALETTE = {
 TIER1_GROUPS = [
     {
         "label": "MASTER DATA",
-        "cols":  ["Order Number", "Customer Name", "Order Date"],
+        "cols":  ["Order Number", "Zone", "Customer Name", "City", "Order Date", "Delivery Date", "Order Weight", "Order SQM Area"],
         "fill":  "master",
     },
     {
@@ -90,6 +90,7 @@ ORDERED_CATEGORY_COLS = [
 ]
 
 NUMERIC_COLS = {
+    "Order Weight", "Order SQM Area",
     "TEMP (Ordered)", "LAMI (Ordered)", "IGU (Ordered)", "LAMI + IGU (Ordered)", "ANI (Ordered)", "FRG (Ordered)",
     "Total Quantity Ordered", "Finished Goods Quantity", "Rejected Quantity", "Cancelled Quantity",
     "TEMP (Pending)", "LAMI (Pending)", "IGU (Pending)", "LAMI + IGU (Pending)", "ANI (Pending)", "FRG (Pending)",
