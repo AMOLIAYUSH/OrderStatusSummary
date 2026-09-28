@@ -23,17 +23,21 @@ LAMI_PATTERN = re.compile(
 def classify_glass(description: str) -> str:
     """
     Classify a finished glass unit by its composite OBDESCRIPTION.
-
     Priority logic:
-      Both IGU + LAMI flags  ->  'LAMI + IGU'
-      IGU flag only          ->  'IGU'
-      LAMI flag only         ->  'LAMI'
-      Neither                ->  'TEMP'
-
-    Safe default: returns 'TEMP' for None / empty strings.
+      FRG (Boropane, Borosilicate, Glazing Tape, PYROBEL-T)
+      LAMI + IGU
+      IGU
+      LAMI
+      ANI (Annealed)
+      TEMP (Fallback)
     """
     if not isinstance(description, str) or not description.strip():
         return "TEMP"
+
+    desc = description.upper()
+
+    if "BOROPANE" in desc or "BOROSILICATE" in desc or "GLAZING TAPE" in desc or "PYROBEL-T" in desc:
+        return "FRG"
 
     has_igu  = bool(IGU_PATTERN.search(description))
     has_lami = bool(LAMI_PATTERN.search(description))
@@ -44,5 +48,7 @@ def classify_glass(description: str) -> str:
         return "IGU"
     elif has_lami:
         return "LAMI"
+    elif "ANNEALED" in desc:
+        return "ANI"
     else:
         return "TEMP"

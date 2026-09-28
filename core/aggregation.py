@@ -8,19 +8,20 @@ from core.categorization import classify_glass
 
 GROUP_KEYS  = ["SOTRANS", "OBTRANS", "SNO"]
 PIVOT_KEYS  = ["SOTRANS", "PNAME", "SALES_ORDER_DATE"]
-CATEGORIES  = ["TEMP", "LAMI", "IGU", "LAMI + IGU"]
+CATEGORIES  = ["TEMP", "LAMI", "IGU", "LAMI + IGU", "ANI", "FRG"]
 
 OUTPUT_COLS = [
     "Order Number", "Customer Name", "Order Date",
-    "TEMP (Ordered)", "LAMI (Ordered)", "IGU (Ordered)", "LAMI + IGU (Ordered)",
+    "TEMP (Ordered)", "LAMI (Ordered)", "IGU (Ordered)", "LAMI + IGU (Ordered)", "ANI (Ordered)", "FRG (Ordered)",
     "Total Quantity Ordered", "Finished Goods Quantity", "Rejected Quantity", "Cancelled Quantity",
-    "TEMP (Pending)", "LAMI (Pending)", "IGU (Pending)", "LAMI + IGU (Pending)",
+    "TEMP (Pending)", "LAMI (Pending)", "IGU (Pending)", "LAMI + IGU (Pending)", "ANI (Pending)", "FRG (Pending)",
     "Plan Order Status", "Plan Status"
 ]
 
 PENDING_COLS = [
     "TEMP (Pending)", "LAMI (Pending)",
     "IGU (Pending)", "LAMI + IGU (Pending)",
+    "ANI (Pending)", "FRG (Pending)",
 ]
 
 
@@ -40,7 +41,7 @@ def build_unit_df(df: pd.DataFrame) -> pd.DataFrame:
             "Ordered_Qty", "FG_Qty", "Pending_Qty", "Category",
         ])
 
-    for col in ["T", "LAC", "II"]:
+    for col in ["T", "LAC", "II", "QC_IN", "FRGINS"]:
         if col not in df.columns:
             df[col] = 0.0
     for col in ["REJ_QTY", "SFO_SHOT_QTY"]:
@@ -58,6 +59,8 @@ def build_unit_df(df: pd.DataFrame) -> pd.DataFrame:
             T                =("T",                 "min"),
             LAC              =("LAC",               "min"),
             II               =("II",                "min"),
+            QC_IN            =("QC_IN",             "min"),
+            FRGINS           =("FRGINS",            "min"),
             Rejected_Qty     =("REJ_QTY",           "max"),
             Cancelled_Qty    =("SFO_SHOT_QTY",      "max"),
         )
@@ -68,10 +71,18 @@ def build_unit_df(df: pd.DataFrame) -> pd.DataFrame:
 
     def _calc_fg(row):
         cat = row["Category"]
+        desc = str(row["OBDESCRIPTION"]).upper()
         qc = row["QC_OUT"]
         if cat == "TEMP": return max(qc, row["T"])
         if cat == "LAMI": return max(qc, row["LAC"])
         if cat in ["IGU", "LAMI + IGU"]: return max(qc, row["II"])
+        if cat == "ANI": return max(qc, row["QC_IN"])
+        if cat == "FRG":
+            if "BOROPANE" in desc or "BOROSILICATE" in desc or "GLAZING TAPE" in desc:
+                return row["Ordered_Qty"]
+            elif "PYROBEL-T" in desc:
+                return row["FRGINS"]
+            return qc
         return qc
 
     unit_df["FG_Qty"] = unit_df.apply(_calc_fg, axis=1)
@@ -117,8 +128,8 @@ def build_pivot_df(unit_df: pd.DataFrame) -> pd.DataFrame:
         ok_parts_order = []
         pending_parts_order = []
         
-        abbr = {"TEMP": "Tem", "LAMI": "Lam", "IGU": "IGU", "LAMI + IGU": "Lam+IGU"}
-        abbr_order = {"TEMP": "Tem", "LAMI": "LAMI", "IGU": "IGU", "LAMI + IGU": "LAMI+IGU"}
+        abbr = {"TEMP": "Tem", "LAMI": "Lam", "IGU": "IGU", "LAMI + IGU": "Lam+IGU", "ANI": "ANI", "FRG": "FRG"}
+        abbr_order = {"TEMP": "Tem", "LAMI": "LAMI", "IGU": "IGU", "LAMI + IGU": "LAMI+IGU", "ANI": "ANI", "FRG": "FRG"}
 
         total_pending = 0
         total_fg = int(grp["FG_Qty"].sum())

@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 REQUIRED_COLS = [
     "PNAME", "SOTRANS", "SALES_ORDER_DATE",
     "OBTRANS", "SNO", "OBQTY", "QC_OUT", "OBDESCRIPTION",
-    "T", "LAC", "II", "REJ_QTY", "SFO_SHOT_QTY"
+    "T", "LAC", "II", "REJ_QTY", "SFO_SHOT_QTY",
+    "QC_IN", "SFOQTY", "FRGINS"
 ]
 
 
@@ -106,7 +107,7 @@ def load_erp_excel(file) -> pd.DataFrame:
         df = df.dropna(subset=["SALES_ORDER_DATE"]).reset_index(drop=True)
 
     # Numeric coercion
-    for col in ["OBQTY", "QC_OUT", "T", "LAC", "II", "REJ_QTY", "SFO_SHOT_QTY"]:
+    for col in ["OBQTY", "QC_OUT", "T", "LAC", "II", "REJ_QTY", "SFO_SHOT_QTY", "QC_IN", "SFOQTY", "FRGINS"]:
         if col in df.columns:
             df[col] = (
                 pd.to_numeric(df[col], errors="coerce")

@@ -123,6 +123,7 @@ class TestTagOrderStatus:
             "Order Number": sotrans,
             "TEMP (Pending)": pending, "LAMI (Pending)": 0,
             "IGU (Pending)": 0, "LAMI + IGU (Pending)": 0,
+            "ANI (Pending)": 0, "FRG (Pending)": 0,
         }])
 
     def test_active(self):

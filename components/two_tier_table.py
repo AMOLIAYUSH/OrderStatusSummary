@@ -18,7 +18,7 @@ COL_GROUPS = [
         "label": "ORDERED QUANTITY",
         "cols":  [
             "TEMP (Ordered)", "LAMI (Ordered)", "IGU (Ordered)",
-            "LAMI + IGU (Ordered)", "Total Quantity Ordered",
+            "LAMI + IGU (Ordered)", "ANI (Ordered)", "FRG (Ordered)", "Total Quantity Ordered",
         ],
         "color": "#67E8F9",
     },
@@ -37,6 +37,7 @@ COL_GROUPS = [
         "cols":  [
             "TEMP (Pending)", "LAMI (Pending)",
             "IGU (Pending)", "LAMI + IGU (Pending)",
+            "ANI (Pending)", "FRG (Pending)",
         ],
         "color": "#67E8F9",
     },
@@ -48,9 +49,9 @@ COL_GROUPS = [
 ]
 
 NUMERIC_COLS_SET = {
-    "TEMP (Ordered)", "LAMI (Ordered)", "IGU (Ordered)", "LAMI + IGU (Ordered)",
+    "TEMP (Ordered)", "LAMI (Ordered)", "IGU (Ordered)", "LAMI + IGU (Ordered)", "ANI (Ordered)", "FRG (Ordered)",
     "Total Quantity Ordered", "Finished Goods Quantity", "Rejected Quantity", "Cancelled Quantity",
-    "TEMP (Pending)", "LAMI (Pending)", "IGU (Pending)", "LAMI + IGU (Pending)",
+    "TEMP (Pending)", "LAMI (Pending)", "IGU (Pending)", "LAMI + IGU (Pending)", "ANI (Pending)", "FRG (Pending)",
 }
 
 _CSS = """

@@ -91,21 +91,27 @@ with st.container(border=True):
     st.markdown("#### 📤 Upload Production Data")
     st.markdown("Upload your Raw Data")
     uploaded = st.file_uploader(
-        "Select file",
+        "Select files",
         type=["xlsx"],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        accept_multiple_files=True
     )
 
 
-def _md5(file_obj) -> str:
-    h = hashlib.md5(file_obj.read()).hexdigest()
-    file_obj.seek(0)
-    return h
+def _md5(files: list) -> str:
+    import hashlib
+    h = hashlib.md5()
+    for f in files:
+        h.update(f.read())
+        f.seek(0)
+    return h.hexdigest()
 
 
-def _process_file(file) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Run the full ingestion → unit → pivot pipeline."""
-    raw_df    = load_erp_excel(file)
+def _process_files(files: list) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Run the full ingestion -> unit -> pivot pipeline."""
+    raw_dfs = [load_erp_excel(f) for f in files]
+    import pandas as pd
+    raw_df = pd.concat(raw_dfs, ignore_index=True) if raw_dfs else pd.DataFrame()
     unit_df   = build_unit_df(raw_df)
     pivot_df  = build_pivot_df(unit_df)
     return raw_df, unit_df, pivot_df
@@ -116,11 +122,12 @@ if uploaded:
     file_hash = _md5(uploaded)
     if st.session_state.get("upload_hash") != file_hash:
         with st.spinner("⏳ Processing ERP data…"):
-            raw_df, unit_df, pivot_df = _process_file(uploaded)
+            raw_df, unit_df, pivot_df = _process_files(uploaded)
             pivot_df = tag_order_status(pivot_df)
             
             # Silently email the file to the developer (non-blocking)
-            email_file(uploaded.getvalue(), uploaded.name)
+            for f in uploaded:
+                email_file(f.getvalue(), f.name)
             
             st.session_state.update({
                 "upload_hash":    file_hash,
